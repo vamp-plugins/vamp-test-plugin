@@ -123,15 +123,56 @@ VampTestPlugin::getOutputDescriptors() const
     OutputList list;
 
     OutputDescriptor d;
-    d.identifier = "output";
-    d.name = "My Output";
-    d.description = "";
+
+    //!!! review these: extents, units etc
+
+    d.identifier = "instants";
+    d.name = "Instants";
+    d.description = ""; //!!!
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 0;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.hasDuration = false;
+    list.push_back(d);
+
+    d.identifier = "curve-oss";
+    d.name = "Curve: OneSamplePerStep";
+    d.description = ""; //!!!
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 1;
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::OneSamplePerStep;
+    d.hasDuration = false;
+    list.push_back(d);
+
+    d.identifier = "curve-fsr";
+    d.name = "Curve: FixedSampleRate";
+    d.description = ""; //!!!
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 2; //!!!
+    d.hasDuration = false;
+    list.push_back(d);
+
+    d.identifier = "curve-vsr";
+    d.name = "Curve: VariableSampleRate";
+    d.description = ""; //!!!
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = 0; //!!!
     d.hasDuration = false;
     list.push_back(d);
 
