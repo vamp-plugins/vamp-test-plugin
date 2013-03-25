@@ -192,10 +192,10 @@ VampTestPlugin::getOutputDescriptors() const
     d.description = "A fixed-height grid of values with one column per process block";
     d.unit = "";
     d.hasFixedBinCount = true;
-    d.binCount = 1;
+    d.binCount = 10;
     d.hasKnownExtents = false;
     d.isQuantized = false;
-    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleType = OutputDescriptor::OneSamplePerStep;
     d.sampleRate = 0;
     d.hasDuration = false;
     list.push_back(d);
@@ -206,11 +206,11 @@ VampTestPlugin::getOutputDescriptors() const
     d.description = "A fixed-height grid of values with equally-spaced columns (independent of process step size)";
     d.unit = "";
     d.hasFixedBinCount = true;
-    d.binCount = 1;
+    d.binCount = 10;
     d.hasKnownExtents = false;
     d.isQuantized = false;
-    d.sampleType = OutputDescriptor::VariableSampleRate;
-    d.sampleRate = 0;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 2;
     d.hasDuration = false;
     list.push_back(d);
 
@@ -263,6 +263,37 @@ untimedCurveValue(RealTime r, int i, int n)
     return f;
 }
 
+static Vamp::Plugin::Feature
+timedCurveValue(RealTime r, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = true;
+    f.timestamp = r;
+    f.hasDuration = false;
+    float v = float(i) / float(n);
+    f.values.push_back(v);
+    s << i+1 << " of " << n << ": " << v << " at " << r.toText();
+    f.label = s.str();
+    return f;
+}
+
+static Vamp::Plugin::Feature
+gridColumn(RealTime r, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = false;
+    f.hasDuration = false;
+    for (int j = 0; j < 10; ++j) {
+	float v = float(j + i + 2) / float(n + 10);
+	f.values.push_back(v);
+    }
+    s << i+1 << " of " << n << " at " << r.toText();
+    f.label = s.str();
+    return f;
+}
+
 VampTestPlugin::FeatureSet
 VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 {
@@ -276,6 +307,12 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 	    // instants output
 	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
 	}
+
+	RealTime variCurveTime = m_instants[i] / 2;
+	if (variCurveTime >= timestamp && variCurveTime < endTime) {
+	    // curve-vsr output
+	    fs[3].push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
+	}
     }
 
     if (m_n < 20) {
@@ -286,6 +323,11 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
     if (m_n < 5) {
         // curve-fsr output
         fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+    }
+
+    if (m_n < 20) {
+	// grid-oss output
+	fs[4].push_back(gridColumn(timestamp, m_n, 20));
     }
 
     m_lastTime = endTime;
@@ -300,13 +342,25 @@ VampTestPlugin::getRemainingFeatures()
 
     for (int i = 0; i < (int)m_instants.size(); ++i) {
 	if (m_instants[i] >= m_lastTime) {
+	    // instants output
 	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
+	}
+
+	RealTime variCurveTime = m_instants[i] / 2;
+	if (variCurveTime >= m_lastTime) {
+	    // curve-vsr output
+	    fs[3].push_back(timedCurveValue(m_instants[i], i, m_instants.size()));
 	}
     }
 
     for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
         // curve-fsr output
         fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+    }
+
+    for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+        // grid-fsr output
+        fs[5].push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
     }
 
     return fs;
