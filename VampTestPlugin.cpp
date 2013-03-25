@@ -128,7 +128,7 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "instants";
     d.name = "Instants";
-    d.description = ""; //!!!
+    d.description = "Single time points without values";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 0;
@@ -140,7 +140,7 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "curve-oss";
     d.name = "Curve: OneSamplePerStep";
-    d.description = ""; //!!!
+    d.description = "A time series with one value per process block";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 1;
@@ -152,7 +152,7 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "curve-fsr";
     d.name = "Curve: FixedSampleRate";
-    d.description = ""; //!!!
+    d.description = "A time series with equally-spaced values (independent of process step size)";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 1;
@@ -165,16 +165,43 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "curve-vsr";
     d.name = "Curve: VariableSampleRate";
-    d.description = ""; //!!!
+    d.description = "A variably-spaced series of values";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = 1;
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::VariableSampleRate;
-    d.sampleRate = 0; //!!!
+    d.sampleRate = 0;
     d.hasDuration = false;
     list.push_back(d);
+
+    d.identifier = "grid-oss";
+    d.name = "Grid: OneSamplePerStep";
+    d.description = "A fixed-height grid of values with one column per process block";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = 0;
+    d.hasDuration = false;
+    list.push_back(d);
+
+    d.identifier = "grid-fsr";
+    d.name = "Grid: FixedSampleRate";
+    d.description = "A fixed-height grid of values with equally-spaced columns (independent of process step size)";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = 0;
+    d.hasDuration = false;
+    list.push_back(d);
+
 
     return list;
 }
