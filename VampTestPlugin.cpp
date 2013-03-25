@@ -2,13 +2,21 @@
 
 #include "VampTestPlugin.h"
 
+#include <sstream>
+
+using std::stringstream;
+
+using Vamp::RealTime;
 
 VampTestPlugin::VampTestPlugin(float inputSampleRate) :
-    Plugin(inputSampleRate)
-    // Also be sure to set your plugin parameters (presumably stored
-    // in member variables) to their default values here -- the host
-    // will not do that for you
+    Plugin(inputSampleRate),
+    m_n(0),
+    m_stepSize(0),
+    m_blockSize(0)
 {
+    for (int i = 0; i < 10; ++i) {
+	m_instants.push_back(RealTime::fromSeconds(1.5 * i));
+    }
 }
 
 VampTestPlugin::~VampTestPlugin()
@@ -124,8 +132,7 @@ VampTestPlugin::getOutputDescriptors() const
 
     OutputDescriptor d;
 
-    //!!! review these: extents, units etc
-
+    // 0 -> instants
     d.identifier = "instants";
     d.name = "Instants";
     d.description = "Single time points without values";
@@ -138,6 +145,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasDuration = false;
     list.push_back(d);
 
+    // 1 -> curve-oss
     d.identifier = "curve-oss";
     d.name = "Curve: OneSamplePerStep";
     d.description = "A time series with one value per process block";
@@ -150,6 +158,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasDuration = false;
     list.push_back(d);
 
+    // 2 -> curve-fsr
     d.identifier = "curve-fsr";
     d.name = "Curve: FixedSampleRate";
     d.description = "A time series with equally-spaced values (independent of process step size)";
@@ -159,10 +168,11 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 2; //!!!
+    d.sampleRate = 2;
     d.hasDuration = false;
     list.push_back(d);
 
+    // 3 -> curve-vsr
     d.identifier = "curve-vsr";
     d.name = "Curve: VariableSampleRate";
     d.description = "A variably-spaced series of values";
@@ -176,6 +186,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasDuration = false;
     list.push_back(d);
 
+    // 4 -> grid-oss
     d.identifier = "grid-oss";
     d.name = "Grid: OneSamplePerStep";
     d.description = "A fixed-height grid of values with one column per process block";
@@ -189,6 +200,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasDuration = false;
     list.push_back(d);
 
+    // 5 -> grid-fsr
     d.identifier = "grid-fsr";
     d.name = "Grid: FixedSampleRate";
     d.description = "A fixed-height grid of values with equally-spaced columns (independent of process step size)";
@@ -212,7 +224,8 @@ VampTestPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
 
-    // Real initialisation work goes here!
+    m_stepSize = stepSize;
+    m_blockSize = blockSize;
 
     return true;
 }
@@ -220,19 +233,82 @@ VampTestPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 void
 VampTestPlugin::reset()
 {
-    // Clear buffers, reset stored values, etc
+    m_n = 0;
+}
+
+static Vamp::Plugin::Feature
+instant(RealTime r, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = true;
+    f.timestamp = r;
+    f.hasDuration = false;
+    s << i+1 << " of " << n << " at " << r.toText();
+    f.label = s.str();
+    return f;
+}
+
+static Vamp::Plugin::Feature
+untimedCurveValue(RealTime r, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = false;
+    f.hasDuration = false;
+    float v = float(i) / float(n);
+    f.values.push_back(v);
+    s << i+1 << " of " << n << ": " << v << " at " << r.toText();
+    f.label = s.str();
+    return f;
 }
 
 VampTestPlugin::FeatureSet
-VampTestPlugin::process(const float *const *inputBuffers, Vamp::RealTime timestamp)
+VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 {
-    // Do actual work!
-    return FeatureSet();
+    FeatureSet fs;
+
+    RealTime endTime = timestamp + RealTime::frame2RealTime
+	(m_stepSize, m_inputSampleRate);
+
+    for (int i = 0; i < (int)m_instants.size(); ++i) {
+	if (m_instants[i] >= timestamp && m_instants[i] < endTime) {
+	    // instants output
+	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
+	}
+    }
+
+    if (m_n < 20) {
+	// curve-oss output
+	fs[1].push_back(untimedCurveValue(timestamp, m_n, 20));
+    }
+
+    if (m_n < 5) {
+        // curve-fsr output
+        fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+    }
+
+    m_lastTime = endTime;
+    m_n = m_n + 1;
+    return fs;
 }
 
 VampTestPlugin::FeatureSet
 VampTestPlugin::getRemainingFeatures()
 {
-    return FeatureSet();
+    FeatureSet fs;
+
+    for (int i = 0; i < (int)m_instants.size(); ++i) {
+	if (m_instants[i] >= m_lastTime) {
+	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
+	}
+    }
+
+    for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+        // curve-fsr output
+        fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+    }
+
+    return fs;
 }
 

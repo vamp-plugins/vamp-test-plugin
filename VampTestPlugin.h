@@ -1,10 +1,4 @@
 
-// This is a skeleton file for use in creating your own plugin
-// libraries.  Replace MyPlugin and myPlugin throughout with the name
-// of your first plugin class, and fill in the gaps as appropriate.
-
-
-// Remember to use a different guard symbol in each header!
 #ifndef _VAMP_TEST_PLUGIN_H_
 #define _VAMP_TEST_PLUGIN_H_
 
@@ -51,7 +45,11 @@ public:
     FeatureSet getRemainingFeatures();
 
 protected:
-    // plugin-specific data and methods go here
+    int m_n;
+    std::vector<Vamp::RealTime> m_instants;
+    int m_stepSize;
+    int m_blockSize;
+    Vamp::RealTime m_lastTime;
 };
 
 
