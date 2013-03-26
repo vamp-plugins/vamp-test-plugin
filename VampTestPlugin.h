@@ -50,6 +50,8 @@ protected:
     int m_stepSize;
     int m_blockSize;
     Vamp::RealTime m_lastTime;
+
+    FeatureSet featuresFrom(Vamp::RealTime, bool);
 };
 
 

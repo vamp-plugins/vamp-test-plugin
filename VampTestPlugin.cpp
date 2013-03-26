@@ -214,6 +214,19 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasDuration = false;
     list.push_back(d);
 
+    // 6 -> notes
+    d.identifier = "notes-regions";
+    d.name = "Notes or Regions";
+    d.description = "Variably-spaced features with one value and duration";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::VariableSampleRate;
+    d.sampleRate = 0;
+    d.hasDuration = true;
+    list.push_back(d);
 
     return list;
 }
@@ -294,8 +307,24 @@ gridColumn(RealTime r, int i, int n)
     return f;
 }
 
-VampTestPlugin::FeatureSet
-VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
+static Vamp::Plugin::Feature
+noteOrRegion(RealTime r, RealTime d, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = true;
+    f.timestamp = r;
+    f.hasDuration = true;
+    f.duration = d;
+    float v = float(i) / float(n);
+    f.values.push_back(v);
+    s << i+1 << " of " << n << ": " << v << " at " << r.toText() << " dur. " << d.toText();
+    f.label = s.str();
+    return f;
+}
+
+Vamp::Plugin::FeatureSet
+VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 {
     FeatureSet fs;
 
@@ -303,66 +332,73 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 	(m_stepSize, m_inputSampleRate);
 
     for (int i = 0; i < (int)m_instants.size(); ++i) {
-	if (m_instants[i] >= timestamp && m_instants[i] < endTime) {
+
+	if (m_instants[i] >= timestamp && (final || m_instants[i] < endTime)) {
 	    // instants output
 	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
 	}
 
 	RealTime variCurveTime = m_instants[i] / 2;
-	if (variCurveTime >= timestamp && variCurveTime < endTime) {
+	if (variCurveTime >= timestamp && (final || variCurveTime < endTime)) {
 	    // curve-vsr output
 	    fs[3].push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
 	}
+
+	RealTime noteTime = (m_instants[i] + m_instants[i]) / 3;
+	RealTime noteDuration = RealTime::fromSeconds((i % 2 == 0) ? 1.75 : 0.5);
+
+	if (noteTime >= timestamp && (final || noteTime < endTime)) {
+	    // notes-regions output
+	    fs[6].push_back(noteOrRegion(noteTime, noteDuration, i, m_instants.size()));
+	}
     }
 
-    if (m_n < 20) {
-	// curve-oss output
-	fs[1].push_back(untimedCurveValue(timestamp, m_n, 20));
-    }
+    if (!final) {
 
-    if (m_n < 5) {
-        // curve-fsr output
-        fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
-    }
+	if (m_n < 20) {
+	    // curve-oss output
+	    fs[1].push_back(untimedCurveValue(timestamp, m_n, 20));
+	}
 
-    if (m_n < 20) {
-	// grid-oss output
-	fs[4].push_back(gridColumn(timestamp, m_n, 20));
+	if (m_n < 5) {
+	    // curve-fsr output
+	    fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+	}
+
+	if (m_n < 20) {
+	    // grid-oss output
+	    fs[4].push_back(gridColumn(timestamp, m_n, 20));
+	}
+
+    } else {
+
+	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+	    // curve-fsr output
+	    fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+	}
+
+	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+	    // grid-fsr output
+	    fs[5].push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
+	}
     }
 
     m_lastTime = endTime;
     m_n = m_n + 1;
+    return fs;
+}    
+
+VampTestPlugin::FeatureSet
+VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
+{
+    FeatureSet fs = featuresFrom(timestamp, false);
     return fs;
 }
 
 VampTestPlugin::FeatureSet
 VampTestPlugin::getRemainingFeatures()
 {
-    FeatureSet fs;
-
-    for (int i = 0; i < (int)m_instants.size(); ++i) {
-	if (m_instants[i] >= m_lastTime) {
-	    // instants output
-	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
-	}
-
-	RealTime variCurveTime = m_instants[i] / 2;
-	if (variCurveTime >= m_lastTime) {
-	    // curve-vsr output
-	    fs[3].push_back(timedCurveValue(m_instants[i], i, m_instants.size()));
-	}
-    }
-
-    for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
-        // curve-fsr output
-        fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
-    }
-
-    for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
-        // grid-fsr output
-        fs[5].push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
-    }
-
+    FeatureSet fs = featuresFrom(m_lastTime, true);
     return fs;
 }
 
