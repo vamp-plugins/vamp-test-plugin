@@ -363,6 +363,10 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 	if (m_n < 5) {
 	    // curve-fsr output
 	    fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+
+	    //!!! we should also have a FixedSampleRate output for
+	    //!!! features *with* timestamps, because the host is
+	    //!!! supposed to read them but round them
 	}
 
 	if (m_n < 20) {
