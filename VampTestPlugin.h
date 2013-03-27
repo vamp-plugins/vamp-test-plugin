@@ -50,6 +50,7 @@ protected:
     int m_stepSize;
     int m_blockSize;
     Vamp::RealTime m_lastTime;
+    mutable std::map<std::string, int> m_outputNumbers;
 
     FeatureSet featuresFrom(Vamp::RealTime, bool);
 };

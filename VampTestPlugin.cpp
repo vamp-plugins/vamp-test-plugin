@@ -130,9 +130,10 @@ VampTestPlugin::getOutputDescriptors() const
 {
     OutputList list;
 
+    int n = 0;
+
     OutputDescriptor d;
 
-    // 0 -> instants
     d.identifier = "instants";
     d.name = "Instants";
     d.description = "Single time points without values";
@@ -143,9 +144,9 @@ VampTestPlugin::getOutputDescriptors() const
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::VariableSampleRate;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 1 -> curve-oss
     d.identifier = "curve-oss";
     d.name = "Curve: OneSamplePerStep";
     d.description = "A time series with one value per process block";
@@ -156,9 +157,9 @@ VampTestPlugin::getOutputDescriptors() const
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::OneSamplePerStep;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 2 -> curve-fsr
     d.identifier = "curve-fsr";
     d.name = "Curve: FixedSampleRate";
     d.description = "A time series with equally-spaced values (independent of process step size)";
@@ -170,9 +171,23 @@ VampTestPlugin::getOutputDescriptors() const
     d.sampleType = OutputDescriptor::FixedSampleRate;
     d.sampleRate = 2;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 3 -> curve-vsr
+    d.identifier = "curve-fsr-timed";
+    d.name = "Curve: FixedSampleRate/Timed";
+    d.description = "A time series with a fixed sample rate (independent of process step size) but with timestamps on features";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 2;
+    d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
+    list.push_back(d);
+
     d.identifier = "curve-vsr";
     d.name = "Curve: VariableSampleRate";
     d.description = "A variably-spaced series of values";
@@ -184,9 +199,9 @@ VampTestPlugin::getOutputDescriptors() const
     d.sampleType = OutputDescriptor::VariableSampleRate;
     d.sampleRate = 0;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 4 -> grid-oss
     d.identifier = "grid-oss";
     d.name = "Grid: OneSamplePerStep";
     d.description = "A fixed-height grid of values with one column per process block";
@@ -198,9 +213,9 @@ VampTestPlugin::getOutputDescriptors() const
     d.sampleType = OutputDescriptor::OneSamplePerStep;
     d.sampleRate = 0;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 5 -> grid-fsr
     d.identifier = "grid-fsr";
     d.name = "Grid: FixedSampleRate";
     d.description = "A fixed-height grid of values with equally-spaced columns (independent of process step size)";
@@ -212,9 +227,9 @@ VampTestPlugin::getOutputDescriptors() const
     d.sampleType = OutputDescriptor::FixedSampleRate;
     d.sampleRate = 2;
     d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    // 6 -> notes
     d.identifier = "notes-regions";
     d.name = "Notes or Regions";
     d.description = "Variably-spaced features with one value and duration";
@@ -226,6 +241,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.sampleType = OutputDescriptor::VariableSampleRate;
     d.sampleRate = 0;
     d.hasDuration = true;
+    m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
     return list;
@@ -292,6 +308,21 @@ timedCurveValue(RealTime r, int i, int n)
 }
 
 static Vamp::Plugin::Feature
+snappedCurveValue(RealTime r, RealTime sn, int i, int n)
+{
+    std::stringstream s;
+    Vamp::Plugin::Feature f;
+    f.hasTimestamp = true;
+    f.timestamp = r;
+    f.hasDuration = false;
+    float v = float(i) / float(n);
+    f.values.push_back(v);
+    s << i+1 << " of " << n << ": " << v << " at " << r.toText() << " snap to " << sn.toText();
+    f.label = s.str();
+    return f;
+}
+
+static Vamp::Plugin::Feature
 gridColumn(RealTime r, int i, int n)
 {
     std::stringstream s;
@@ -323,6 +354,13 @@ noteOrRegion(RealTime r, RealTime d, int i, int n)
     return f;
 }
 
+static
+float snap(float x, float r)
+{
+    int n = int(x / r + 0.5);
+    return n * r;
+}
+
 Vamp::Plugin::FeatureSet
 VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 {
@@ -334,56 +372,70 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
     for (int i = 0; i < (int)m_instants.size(); ++i) {
 
 	if (m_instants[i] >= timestamp && (final || m_instants[i] < endTime)) {
-	    // instants output
-	    fs[0].push_back(instant(m_instants[i], i, m_instants.size()));
+	    fs[m_outputNumbers["instants"]]
+		.push_back(instant(m_instants[i], i, m_instants.size()));
 	}
 
 	RealTime variCurveTime = m_instants[i] / 2;
 	if (variCurveTime >= timestamp && (final || variCurveTime < endTime)) {
-	    // curve-vsr output
-	    fs[3].push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
+	    fs[m_outputNumbers["curve-vsr"]]
+		.push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
 	}
 
 	RealTime noteTime = (m_instants[i] + m_instants[i]) / 3;
 	RealTime noteDuration = RealTime::fromSeconds((i % 2 == 0) ? 1.75 : 0.5);
 
 	if (noteTime >= timestamp && (final || noteTime < endTime)) {
-	    // notes-regions output
-	    fs[6].push_back(noteOrRegion(noteTime, noteDuration, i, m_instants.size()));
+	    fs[m_outputNumbers["notes-regions"]]
+		.push_back(noteOrRegion(noteTime, noteDuration, i, m_instants.size()));
 	}
     }
 
     if (!final) {
 
 	if (m_n < 20) {
-	    // curve-oss output
-	    fs[1].push_back(untimedCurveValue(timestamp, m_n, 20));
+	    fs[m_outputNumbers["curve-oss"]]
+		.push_back(untimedCurveValue(timestamp, m_n, 20));
 	}
 
 	if (m_n < 5) {
-	    // curve-fsr output
-	    fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+	    fs[m_outputNumbers["curve-fsr"]]
+		.push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
 
-	    //!!! we should also have a FixedSampleRate output for
-	    //!!! features *with* timestamps, because the host is
-	    //!!! supposed to read them but round them
+	    float s = (m_n / 4) * 2;
+	    if ((m_n % 4) > 0) {
+		s += float((m_n % 4) - 1) / 6.0;
+	    }
+	    fs[m_outputNumbers["curve-fsr-timed"]]
+		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
+					     RealTime::fromSeconds(snap(s, 0.5)),
+					     m_n, 10));
 	}
 
 	if (m_n < 20) {
-	    // grid-oss output
-	    fs[4].push_back(gridColumn(timestamp, m_n, 20));
+	    fs[m_outputNumbers["grid-oss"]]
+		.push_back(gridColumn(timestamp, m_n, 20));
 	}
 
     } else {
 
 	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
-	    // curve-fsr output
-	    fs[2].push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+	    fs[m_outputNumbers["curve-fsr"]]
+		.push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+
+	    float s = (i / 4) * 2;
+	    if ((i % 4) > 0) {
+		s += float((i % 4) - 1) / 6.0;
+	    }
+	    fs[m_outputNumbers["curve-fsr-timed"]]
+		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
+					     RealTime::fromSeconds(snap(s, 0.5)),
+					     i, 10));
 	}
 
 	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
-	    // grid-fsr output
-	    fs[5].push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
+	    fs[m_outputNumbers["grid-fsr"]]
+		.push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
 	}
     }
 
