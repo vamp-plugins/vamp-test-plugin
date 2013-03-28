@@ -169,7 +169,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 2;
+    d.sampleRate = 2.5;
     d.hasDuration = false;
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
@@ -183,7 +183,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 2;
+    d.sampleRate = 2.5;
     d.hasDuration = false;
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
@@ -225,7 +225,7 @@ VampTestPlugin::getOutputDescriptors() const
     d.hasKnownExtents = false;
     d.isQuantized = false;
     d.sampleType = OutputDescriptor::FixedSampleRate;
-    d.sampleRate = 2;
+    d.sampleRate = 2.5;
     d.hasDuration = false;
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
@@ -400,7 +400,7 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 
 	if (m_n < 5) {
 	    fs[m_outputNumbers["curve-fsr"]]
-		.push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.0), m_n, 10));
+		.push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.5), m_n, 10));
 
 	    float s = (m_n / 4) * 2;
 	    if ((m_n % 4) > 0) {
@@ -408,7 +408,7 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 	    }
 	    fs[m_outputNumbers["curve-fsr-timed"]]
 		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
-					     RealTime::fromSeconds(snap(s, 0.5)),
+					     RealTime::fromSeconds(snap(s, 0.4)),
 					     m_n, 10));
 	}
 
@@ -421,7 +421,7 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 
 	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
 	    fs[m_outputNumbers["curve-fsr"]]
-		.push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.0), i, 10));
+		.push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.5), i, 10));
 
 	    float s = (i / 4) * 2;
 	    if ((i % 4) > 0) {
@@ -429,11 +429,11 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 	    }
 	    fs[m_outputNumbers["curve-fsr-timed"]]
 		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
-					     RealTime::fromSeconds(snap(s, 0.5)),
+					     RealTime::fromSeconds(snap(s, 0.4)),
 					     i, 10));
 	}
 
-	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+	for (int i = 0; i < 10; ++i) {
 	    fs[m_outputNumbers["grid-fsr"]]
 		.push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
 	}
