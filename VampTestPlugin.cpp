@@ -435,7 +435,7 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 
 	for (int i = 0; i < 10; ++i) {
 	    fs[m_outputNumbers["grid-fsr"]]
-		.push_back(gridColumn(RealTime::fromSeconds(i / 2.0), i, 10));
+		.push_back(gridColumn(RealTime::fromSeconds(i / 2.5), i, 10));
 	}
     }
 
