@@ -1,0 +1,25 @@
+
+PLUGIN_LIBRARY_NAME := vamp-test-plugin
+
+PLUGIN_SOURCES := VampTestPlugin.cpp plugins.cpp
+
+PLUGIN_HEADERS := VampTestPlugin.h
+
+VAMP_SDK_DIR := ../vamp-plugin-sdk
+
+CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall -fPIC
+PLUGIN_EXT := .dylib
+LDFLAGS := -dynamiclib $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
+
+
+PLUGIN_OBJECTS := $(PLUGIN_SOURCES:.cpp=.o)
+PLUGIN_OBJECTS := $(PLUGIN_OBJECTS:.c=.o)
+
+$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT): $(PLUGIN_OBJECTS)
+	   $(CXX) -o $@ $^ $(LDFLAGS)
+
+$(PLUGIN_OBJECTS): $(PLUGIN_HEADERS)
+
+clean:
+	rm -f *.o
+
