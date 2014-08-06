@@ -8,7 +8,7 @@ CXX	:= i486-mingw32-c++
 
 CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall 
 PLUGIN_EXT := .dll
-LDFLAGS := -shared -Wl,-soname=$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--version-script=vamp-plugin.map
+LDFLAGS := -shared -Wl,-soname=$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--retain-symbols-file=vamp-plugin.list
 
 
 PLUGIN_OBJECTS := $(PLUGIN_SOURCES:.cpp=.o)
