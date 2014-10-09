@@ -7,9 +7,10 @@ PLUGIN_HEADERS := VampTestPlugin.h
 
 VAMP_SDK_DIR := ../vamp-plugin-sdk
 
-CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall -fPIC
+ARCHFLAGS := -mmacosx-version-min=10.6
+CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall -fPIC $(ARCHFLAGS)
 PLUGIN_EXT := .dylib
-LDFLAGS := -dynamiclib $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
+LDFLAGS := -dynamiclib $(ARCHFLAGS) $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 
 
 PLUGIN_OBJECTS := $(PLUGIN_SOURCES:.cpp=.o)
