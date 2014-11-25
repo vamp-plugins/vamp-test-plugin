@@ -10,6 +10,7 @@ using Vamp::RealTime;
 
 VampTestPlugin::VampTestPlugin(float inputSampleRate) :
     Plugin(inputSampleRate),
+    m_produceOutput(true),
     m_n(0),
     m_stepSize(0),
     m_blockSize(0)
@@ -50,7 +51,7 @@ VampTestPlugin::getMaker() const
 int
 VampTestPlugin::getPluginVersion() const
 {
-    return 1;
+    return 2;
 }
 
 string
@@ -93,18 +94,39 @@ VampTestPlugin::ParameterList
 VampTestPlugin::getParameterDescriptors() const
 {
     ParameterList list;
+
+    // Provide one parameter, and make it so that we can easily tell
+    // whether it has been changed
+    ParameterDescriptor d;
+    d.identifier = "produce_output";
+    d.name = "Produce some output";
+    d.description = "Whether to produce any output. If this parameter is switched off, the plugin will produce no output. This is intended for basic testing of whether a host's parameter setting logic is functioning.";
+    d.unit = "";
+    d.minValue = 0;
+    d.maxValue = 1;
+    d.defaultValue = 1;
+    d.isQuantized = true;
+    d.quantizeStep = 1;
+    list.push_back(d);
+    
     return list;
 }
 
 float
 VampTestPlugin::getParameter(string identifier) const
 {
+    if (identifier == "produce_output") {
+	return m_produceOutput ? 1.f : 0.f;
+    }
     return 0;
 }
 
 void
 VampTestPlugin::setParameter(string identifier, float value) 
 {
+    if (identifier == "produce_output") {
+	m_produceOutput = (value > 0.5);
+    }
 }
 
 VampTestPlugin::ProgramList
@@ -447,6 +469,7 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 VampTestPlugin::FeatureSet
 VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 {
+    if (!m_produceOutput) return FeatureSet();
     FeatureSet fs = featuresFrom(timestamp, false);
     return fs;
 }
@@ -454,6 +477,7 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 VampTestPlugin::FeatureSet
 VampTestPlugin::getRemainingFeatures()
 {
+    if (!m_produceOutput) return FeatureSet();
     FeatureSet fs = featuresFrom(m_lastTime, true);
     return fs;
 }

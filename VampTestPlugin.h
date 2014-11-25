@@ -45,6 +45,7 @@ public:
     FeatureSet getRemainingFeatures();
 
 protected:
+    bool m_produceOutput;
     int m_n;
     std::vector<Vamp::RealTime> m_instants;
     int m_stepSize;
