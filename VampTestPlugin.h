@@ -48,6 +48,7 @@ protected:
     bool m_produceOutput;
     int m_n;
     std::vector<Vamp::RealTime> m_instants;
+    int m_channels;
     int m_stepSize;
     int m_blockSize;
     Vamp::RealTime m_lastTime;

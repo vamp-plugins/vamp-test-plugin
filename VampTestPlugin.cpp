@@ -3,6 +3,7 @@
 #include "VampTestPlugin.h"
 
 #include <sstream>
+#include <cmath>
 
 using std::stringstream;
 
@@ -12,6 +13,7 @@ VampTestPlugin::VampTestPlugin(float inputSampleRate) :
     Plugin(inputSampleRate),
     m_produceOutput(true),
     m_n(0),
+    m_channels(1),
     m_stepSize(0),
     m_blockSize(0)
 {
@@ -87,7 +89,7 @@ VampTestPlugin::getMinChannelCount() const
 size_t
 VampTestPlugin::getMaxChannelCount() const
 {
-    return 1;
+    return 10;
 }
 
 VampTestPlugin::ParameterList
@@ -266,6 +268,19 @@ VampTestPlugin::getOutputDescriptors() const
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
+    d.identifier = "rmss";
+    d.name = "RMS of Input Channels";
+    d.description = "RMS levels of each input channel";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = m_channels;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::OneSamplePerStep;
+    d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
+    list.push_back(d);
+
     return list;
 }
 
@@ -275,6 +290,7 @@ VampTestPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
     if (channels < getMinChannelCount() ||
 	channels > getMaxChannelCount()) return false;
 
+    m_channels = channels;
     m_stepSize = stepSize;
     m_blockSize = blockSize;
 
@@ -471,6 +487,18 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 {
     if (!m_produceOutput) return FeatureSet();
     FeatureSet fs = featuresFrom(timestamp, false);
+
+    Feature f;
+    for (int c = 0; c < m_channels; ++c) {
+	float sum = 0.f;
+	for (int i = 0; i < m_blockSize; ++i) {
+	    sum += inputBuffers[c][i] * inputBuffers[c][i];
+	}
+	float rms = sqrtf(sum / m_blockSize);
+	f.values.push_back(rms);
+    }
+    fs[m_outputNumbers["rmss"]].push_back(f);
+    
     return fs;
 }
 
