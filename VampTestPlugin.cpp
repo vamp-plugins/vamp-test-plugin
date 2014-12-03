@@ -2,10 +2,11 @@
 
 #include "VampTestPlugin.h"
 
+#include <iostream>
 #include <sstream>
 #include <cmath>
 
-using std::stringstream;
+using namespace std;
 
 using Vamp::RealTime;
 
@@ -268,9 +269,9 @@ VampTestPlugin::getOutputDescriptors() const
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
-    d.identifier = "rmss";
-    d.name = "RMS of Input Channels";
-    d.description = "RMS levels of each input channel";
+    d.identifier = "input-summary";
+    d.name = "Data derived from inputs";
+    d.description = "One-sample-per-step features with n values, where n is the number of input channels. Each feature contains, for each input channel, the first sample value on that channel plus the total number of non-zero samples on that channel";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = m_channels;
@@ -306,7 +307,7 @@ VampTestPlugin::reset()
 static Vamp::Plugin::Feature
 instant(RealTime r, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = true;
     f.timestamp = r;
@@ -319,7 +320,7 @@ instant(RealTime r, int i, int n)
 static Vamp::Plugin::Feature
 untimedCurveValue(RealTime r, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = false;
     f.hasDuration = false;
@@ -333,7 +334,7 @@ untimedCurveValue(RealTime r, int i, int n)
 static Vamp::Plugin::Feature
 timedCurveValue(RealTime r, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = true;
     f.timestamp = r;
@@ -348,7 +349,7 @@ timedCurveValue(RealTime r, int i, int n)
 static Vamp::Plugin::Feature
 snappedCurveValue(RealTime r, RealTime sn, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = true;
     f.timestamp = r;
@@ -363,7 +364,7 @@ snappedCurveValue(RealTime r, RealTime sn, int i, int n)
 static Vamp::Plugin::Feature
 gridColumn(RealTime r, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = false;
     f.hasDuration = false;
@@ -379,7 +380,7 @@ gridColumn(RealTime r, int i, int n)
 static Vamp::Plugin::Feature
 noteOrRegion(RealTime r, RealTime d, int i, int n)
 {
-    std::stringstream s;
+    stringstream s;
     Vamp::Plugin::Feature f;
     f.hasTimestamp = true;
     f.timestamp = r;
@@ -490,14 +491,14 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 
     Feature f;
     for (int c = 0; c < m_channels; ++c) {
-	float sum = 0.f;
+	// first value plus number of non-zero values
+	float sum = inputBuffers[c][0];
 	for (int i = 0; i < m_blockSize; ++i) {
-	    sum += inputBuffers[c][i] * inputBuffers[c][i];
+	    if (inputBuffers[c][i] != 0.f) sum += 1;
 	}
-	float rms = sqrtf(sum / m_blockSize);
-	f.values.push_back(rms);
+	f.values.push_back(sum);
     }
-    fs[m_outputNumbers["rmss"]].push_back(f);
+    fs[m_outputNumbers["input-summary"]].push_back(f);
     
     return fs;
 }
