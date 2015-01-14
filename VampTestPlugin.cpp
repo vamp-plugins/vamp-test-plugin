@@ -293,8 +293,8 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "input-timestamp";
     d.name = "Input timestamp";
-    d.description = "One-sample-per-step features with one value, containing the time in seconds converted from the timestamp of the corresponding process input block.";
-    d.unit = "s";
+    d.description = "One-sample-per-step features with one value, containing the time in sample frames converted from the timestamp of the corresponding process input block.";
+    d.unit = "samples";
     d.hasFixedBinCount = true;
     d.binCount = 1;
     d.hasKnownExtents = false;
@@ -523,7 +523,7 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
     fs[m_outputNumbers["input-summary"]].push_back(f);
 
     f.values.clear();
-    f.values.push_back(float(timestamp / RealTime(1, 0)));
+    f.values.push_back(RealTime::realTime2Frame(timestamp, m_inputSampleRate));
     fs[m_outputNumbers["input-timestamp"]].push_back(f);
     
     return fs;
