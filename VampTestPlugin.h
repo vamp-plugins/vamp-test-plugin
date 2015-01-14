@@ -10,7 +10,7 @@ using std::string;
 class VampTestPlugin : public Vamp::Plugin
 {
 public:
-    VampTestPlugin(float inputSampleRate);
+    VampTestPlugin(float inputSampleRate, bool freq);
     virtual ~VampTestPlugin();
 
     string getIdentifier() const;
@@ -45,6 +45,7 @@ public:
     FeatureSet getRemainingFeatures();
 
 protected:
+    bool m_frequencyDomain;
     bool m_produceOutput;
     int m_n;
     std::vector<Vamp::RealTime> m_instants;

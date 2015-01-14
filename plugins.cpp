@@ -5,9 +5,25 @@
 
 #include "VampTestPlugin.h"
 
+class Adapter : public Vamp::PluginAdapterBase
+{
+public:
+    Adapter(bool freq) :
+	PluginAdapterBase(),
+	m_freq(freq) { }
 
-static Vamp::PluginAdapter<VampTestPlugin> myPluginAdapter;
+    virtual ~Adapter() { }
 
+protected:
+    bool m_freq;
+
+    Vamp::Plugin *createPlugin(float inputSampleRate) {
+	return new VampTestPlugin(inputSampleRate, m_freq);
+    }
+};
+
+static Adapter timeAdapter(false);
+static Adapter freqAdapter(true);
 
 const VampPluginDescriptor *
 vampGetPluginDescriptor(unsigned int version, unsigned int index)
@@ -20,7 +36,8 @@ vampGetPluginDescriptor(unsigned int version, unsigned int index)
     // library.)
 
     switch (index) {
-    case  0: return myPluginAdapter.getDescriptor();
+    case  0: return timeAdapter.getDescriptor();
+    case  1: return freqAdapter.getDescriptor();
     default: return 0;
     }
 }

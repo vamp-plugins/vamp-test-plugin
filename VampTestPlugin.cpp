@@ -10,8 +10,9 @@ using namespace std;
 
 using Vamp::RealTime;
 
-VampTestPlugin::VampTestPlugin(float inputSampleRate) :
+VampTestPlugin::VampTestPlugin(float inputSampleRate, bool freq) :
     Plugin(inputSampleRate),
+    m_frequencyDomain(freq),
     m_produceOutput(true),
     m_n(0),
     m_channels(1),
@@ -30,13 +31,21 @@ VampTestPlugin::~VampTestPlugin()
 string
 VampTestPlugin::getIdentifier() const
 {
-    return "vamp-test-plugin";
+    if (m_frequencyDomain) {
+	return "vamp-test-plugin-freq";
+    } else {
+	return "vamp-test-plugin";
+    }
 }
 
 string
 VampTestPlugin::getName() const
 {
-    return "Vamp Test Plugin";
+    if (m_frequencyDomain) {
+	return "Vamp Test Plugin (Frequency-Domain Input)";
+    } else {
+	return "Vamp Test Plugin";
+    }
 }
 
 string
@@ -54,7 +63,7 @@ VampTestPlugin::getMaker() const
 int
 VampTestPlugin::getPluginVersion() const
 {
-    return 2;
+    return 3;
 }
 
 string
@@ -66,7 +75,7 @@ VampTestPlugin::getCopyright() const
 VampTestPlugin::InputDomain
 VampTestPlugin::getInputDomain() const
 {
-    return TimeDomain;
+    return m_frequencyDomain ? FrequencyDomain : TimeDomain;
 }
 
 size_t
@@ -282,6 +291,19 @@ VampTestPlugin::getOutputDescriptors() const
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
+    d.identifier = "input-timestamp";
+    d.name = "Input timestamp";
+    d.description = "One-sample-per-step features with one value, containing the time in seconds converted from the timestamp of the corresponding process input block.";
+    d.unit = "s";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::OneSamplePerStep;
+    d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
+    list.push_back(d);
+    
     return list;
 }
 
@@ -499,6 +521,10 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 	f.values.push_back(sum);
     }
     fs[m_outputNumbers["input-summary"]].push_back(f);
+
+    f.values.clear();
+    f.values.push_back(float(timestamp / RealTime(1, 0)));
+    fs[m_outputNumbers["input-timestamp"]].push_back(f);
     
     return fs;
 }
