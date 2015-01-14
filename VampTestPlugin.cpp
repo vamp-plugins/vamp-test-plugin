@@ -2,6 +2,8 @@
 
 #include "VampTestPlugin.h"
 
+#include <vamp-sdk/FFT.h>
+
 #include <iostream>
 #include <sstream>
 #include <cmath>
@@ -280,7 +282,7 @@ VampTestPlugin::getOutputDescriptors() const
 
     d.identifier = "input-summary";
     d.name = "Data derived from inputs";
-    d.description = "One-sample-per-step features with n values, where n is the number of input channels. Each feature contains, for each input channel, the first sample value on that channel plus the total number of non-zero samples on that channel";
+    d.description = "One-sample-per-step features with n values, where n is the number of input channels. Each feature contains, for each input channel, the first sample value on that channel plus the total number of non-zero samples on that channel. (\"Non-zero\" is determined by comparison against a magnitude threshold which is actually 1e-6 rather than exactly zero.)";
     d.unit = "";
     d.hasFixedBinCount = true;
     d.binCount = m_channels;
@@ -510,20 +512,51 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 {
     if (!m_produceOutput) return FeatureSet();
     FeatureSet fs = featuresFrom(timestamp, false);
-
+    
     Feature f;
+    float eps = 1e-6f;
+
     for (int c = 0; c < m_channels; ++c) {
-	// first value plus number of non-zero values
-	float sum = inputBuffers[c][0];
-	for (int i = 0; i < m_blockSize; ++i) {
-	    if (inputBuffers[c][i] != 0.f) sum += 1;
-	}
-	f.values.push_back(sum);
+	if (!m_frequencyDomain) {
+	    // first value plus number of non-zero values
+	    float sum = inputBuffers[c][0];
+	    for (int i = 0; i < m_blockSize; ++i) {
+		if (fabsf(inputBuffers[c][i]) >= eps) sum += 1;
+	    }
+	    f.values.push_back(sum);
+	} else {
+	    // If we're in frequency-domain mode, we convert back to
+	    // time-domain to calculate the input-summary feature
+	    // output. That should help the caller check that
+	    // time-frequency conversion has gone more or less OK,
+	    // though they'll still have to bear in mind windowing and
+	    // FFT shift (i.e. phase shift which puts the first
+	    // element in the middle of the frame)
+	    vector<double> ri(m_blockSize, 0.0);
+	    vector<double> ii(m_blockSize, 0.0);
+	    vector<double> ro(m_blockSize, 0.0);
+	    vector<double> io(m_blockSize, 0.0);
+	    for (int i = 0; i <= m_blockSize/2; ++i) {
+		ri[i] = inputBuffers[c][i*2];
+		ii[i] = inputBuffers[c][i*2 + 1];
+		if (i > 0) ri[m_blockSize-i] =  ri[i];
+		if (i > 0) ii[m_blockSize-i] = -ii[i];
+	    }
+	    Vamp::FFT::inverse(m_blockSize, &ri[0], &ii[0], &ro[0], &io[0]);
+	    float sum = 0;
+	    for (int i = 0; i < m_blockSize; ++i) {
+		if (fabsf(ro[i]) >= eps) sum += 1;
+	    }
+	    sum += ro[0];
+	    f.values.push_back(sum);
+	}	    
     }
+
     fs[m_outputNumbers["input-summary"]].push_back(f);
 
     f.values.clear();
-    f.values.push_back(RealTime::realTime2Frame(timestamp, m_inputSampleRate));
+    float frame = RealTime::realTime2Frame(timestamp, m_inputSampleRate);
+    f.values.push_back(frame);
     fs[m_outputNumbers["input-timestamp"]].push_back(f);
     
     return fs;
