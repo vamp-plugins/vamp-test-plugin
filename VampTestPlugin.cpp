@@ -157,7 +157,7 @@ VampTestPlugin::getCurrentProgram() const
 }
 
 void
-VampTestPlugin::selectProgram(string name)
+VampTestPlugin::selectProgram(string)
 {
 }
 

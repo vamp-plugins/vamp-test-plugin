@@ -1,26 +1,15 @@
 
-PLUGIN_LIBRARY_NAME := vamp-test-plugin
+VAMPSDK_DIR	:= ../vamp-plugin-sdk
 
-PLUGIN_SOURCES := VampTestPlugin.cpp plugins.cpp
+ARCHFLAGS 	:= -mmacosx-version-min=10.6
 
-PLUGIN_HEADERS := VampTestPlugin.h
+CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS)
 
-VAMP_SDK_DIR := ../vamp-plugin-sdk
+PLUGIN_LDFLAGS	:= -dynamiclib $(ARCHFLAGS) $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
 
-ARCHFLAGS := -mmacosx-version-min=10.6
-CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall -fPIC $(ARCHFLAGS)
-PLUGIN_EXT := .dylib
-LDFLAGS := -dynamiclib $(ARCHFLAGS) $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
+PLUGIN_EXT	:= .dylib
 
+MAKEFILE_EXT 	:= .osx
 
-PLUGIN_OBJECTS := $(PLUGIN_SOURCES:.cpp=.o)
-PLUGIN_OBJECTS := $(PLUGIN_OBJECTS:.c=.o)
-
-$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT): $(PLUGIN_OBJECTS)
-	   $(CXX) -o $@ $^ $(LDFLAGS)
-
-$(PLUGIN_OBJECTS): $(PLUGIN_HEADERS)
-
-clean:
-	rm -f *.o
+include Makefile.inc
 

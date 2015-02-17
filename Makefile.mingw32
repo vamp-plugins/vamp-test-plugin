@@ -1,24 +1,15 @@
 
-PLUGIN_LIBRARY_NAME := vamp-test-plugin
-PLUGIN_SOURCES := VampTestPlugin.cpp plugins.cpp
-PLUGIN_HEADERS := VampTestPlugin.h
-VAMP_SDK_DIR := ../vamp-plugin-sdk
+VAMPSDK_DIR	:= ../vamp-plugin-sdk
 
-CXX	:= i486-mingw32-c++
+CXX	        := i486-mingw32-c++
 
-CXXFLAGS := -I$(VAMP_SDK_DIR) -Wall 
-PLUGIN_EXT := .dll
-LDFLAGS := -shared -Wl,-soname=$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT) $(VAMP_SDK_DIR)/libvamp-sdk.a -Wl,--retain-symbols-file=vamp-plugin.list
+CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS)
 
+PLUGIN_LDFLAGS	:= -shared -Wl,-soname=$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT) -Wl,-Bstatic -L$(VAMPSDK_DIR) -lvamp-sdk -Wl,-Bdynamic -Wl,--retain-symbols-file=vamp-plugin.list
 
-PLUGIN_OBJECTS := $(PLUGIN_SOURCES:.cpp=.o)
-PLUGIN_OBJECTS := $(PLUGIN_OBJECTS:.c=.o)
+PLUGIN_EXT	:= .dll
 
-$(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT): $(PLUGIN_OBJECTS)
-	   $(CXX) -o $@ $^ $(LDFLAGS)
+MAKEFILE_EXT 	:= .mingw32
 
-$(PLUGIN_OBJECTS): $(PLUGIN_HEADERS)
-
-clean:
-	rm -f *.o
+include Makefile.inc
 
