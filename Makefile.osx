@@ -5,7 +5,7 @@ ARCHFLAGS 	:= -mmacosx-version-min=10.6
 
 CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS)
 
-PLUGIN_LDFLAGS	:= -dynamiclib $(ARCHFLAGS) $(VAMP_SDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name $(PLUGIN_LIBRARY_NAME)$(PLUGIN_EXT)
+PLUGIN_LDFLAGS	:= -dynamiclib $(ARCHFLAGS) $(VAMPSDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name vamp-test-plugin.dylib
 
 PLUGIN_EXT	:= .dylib
 
