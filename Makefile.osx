@@ -1,7 +1,7 @@
 
 VAMPSDK_DIR	:= ../vamp-plugin-sdk
 
-ARCHFLAGS 	:= -mmacosx-version-min=10.6
+ARCHFLAGS 	:= -mmacosx-version-min=10.7 -stdlib=libc++
 
 CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS)
 
