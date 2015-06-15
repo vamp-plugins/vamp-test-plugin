@@ -545,7 +545,7 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
 	    Vamp::FFT::inverse(m_blockSize, &ri[0], &ii[0], &ro[0], &io[0]);
 	    float sum = 0;
 	    for (int i = 0; i < m_blockSize; ++i) {
-		if (fabsf(ro[i]) >= eps) sum += 1;
+		if (fabs(ro[i]) >= eps) sum += 1;
 	    }
 	    sum += ro[0];
 	    f.values.push_back(sum);
