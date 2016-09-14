@@ -252,6 +252,20 @@ VampTestPlugin::getOutputDescriptors() const
     m_outputNumbers[d.identifier] = n++;
     list.push_back(d);
 
+    d.identifier = "curve-fsr-mixed";
+    d.name = "Curve: FixedSampleRate/Mixed";
+    d.description = "A time series with a fixed sample rate (independent of process step size) and with timestamps on some features";
+    d.unit = "";
+    d.hasFixedBinCount = true;
+    d.binCount = 1;
+    d.hasKnownExtents = false;
+    d.isQuantized = false;
+    d.sampleType = OutputDescriptor::FixedSampleRate;
+    d.sampleRate = 2.5;
+    d.hasDuration = false;
+    m_outputNumbers[d.identifier] = n++;
+    list.push_back(d);
+
     d.identifier = "curve-vsr";
     d.name = "Curve: VariableSampleRate";
     d.description = "A variably-spaced series of values";
@@ -522,6 +536,24 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
                 .push_back(snappedCurveValue(RealTime::fromSeconds(s),
                                              RealTime::fromSeconds(snap(s, 0.4)),
                                              i, 10));
+        }
+
+        for (int i = 0; i < 10; ++i) {
+            static std::vector<float> times {
+                2.4, 2.9, 3.14, 3.5, 4.0, 3.7, 4, 4.4, 4.8, 5
+            };
+            float s = times[i];
+            float sn = snap(s, 0.4) + 1e-5; // to avoid printing e.g. 2.799
+            if (i == 4 || i == 8) {
+                fs[m_outputNumbers["curve-fsr-mixed"]]
+                    .push_back(untimedCurveValue(RealTime::fromSeconds(s),
+                                                 i, 10));
+            } else {
+                fs[m_outputNumbers["curve-fsr-mixed"]]
+                    .push_back(snappedCurveValue(RealTime::fromSeconds(s),
+                                                 RealTime::fromSeconds(sn),
+                                                 i, 10));
+            }
         }
         
         for (int i = 0; i < 10; ++i) {
