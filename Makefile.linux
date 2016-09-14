@@ -1,7 +1,7 @@
 
 VAMPSDK_DIR	:= ../vamp-plugin-sdk
 
-CXXFLAGS	:= -Wall -Wextra -Werror -g -fPIC -I$(VAMPSDK_DIR)
+CXXFLAGS	:= -Wall -Wextra -Werror -g -fPIC -I$(VAMPSDK_DIR) -std=c++11
 
 PLUGIN_LDFLAGS	:= -shared -Wl,-Bsymbolic -Wl,-z,defs -Wl,--version-script=vamp-plugin.map -Wl,-Bstatic -L$(VAMPSDK_DIR) -lvamp-sdk -Wl,-Bdynamic
 

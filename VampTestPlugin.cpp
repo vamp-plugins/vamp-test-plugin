@@ -1,4 +1,32 @@
+/* -*- c-basic-offset: 4 indent-tabs-mode: nil -*-  vi:set ts=8 sts=4 sw=4: */
+/*
+    Vamp Test Plugin
+    Copyright (c) 2013-2016 Queen Mary, University of London
 
+    Permission is hereby granted, free of charge, to any person
+    obtaining a copy of this software and associated documentation
+    files (the "Software"), to deal in the Software without
+    restriction, including without limitation the rights to use, copy,
+    modify, merge, publish, distribute, sublicense, and/or sell copies
+    of the Software, and to permit persons to whom the Software is
+    furnished to do so, subject to the following conditions:
+
+    The above copyright notice and this permission notice shall be
+    included in all copies or substantial portions of the Software.
+
+    THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+    EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+    MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+    NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY
+    CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF
+    CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+    WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+    Except as contained in this notice, the names of the Centre for
+    Digital Music and Queen Mary, University of London shall not be
+    used in advertising or otherwise to promote the sale, use or other
+    dealings in this Software without prior written authorization.
+*/
 
 #include "VampTestPlugin.h"
 
@@ -22,7 +50,7 @@ VampTestPlugin::VampTestPlugin(float inputSampleRate, bool freq) :
     m_blockSize(0)
 {
     for (int i = 0; i < 10; ++i) {
-	m_instants.push_back(RealTime::fromSeconds(1.5 * i));
+        m_instants.push_back(RealTime::fromSeconds(1.5 * i));
     }
 }
 
@@ -34,9 +62,9 @@ string
 VampTestPlugin::getIdentifier() const
 {
     if (m_frequencyDomain) {
-	return "vamp-test-plugin-freq";
+        return "vamp-test-plugin-freq";
     } else {
-	return "vamp-test-plugin";
+        return "vamp-test-plugin";
     }
 }
 
@@ -44,9 +72,9 @@ string
 VampTestPlugin::getName() const
 {
     if (m_frequencyDomain) {
-	return "Vamp Test Plugin (Frequency-Domain Input)";
+        return "Vamp Test Plugin (Frequency-Domain Input)";
     } else {
-	return "Vamp Test Plugin";
+        return "Vamp Test Plugin";
     }
 }
 
@@ -130,7 +158,7 @@ float
 VampTestPlugin::getParameter(string identifier) const
 {
     if (identifier == "produce_output") {
-	return m_produceOutput ? 1.f : 0.f;
+        return m_produceOutput ? 1.f : 0.f;
     }
     return 0;
 }
@@ -139,7 +167,7 @@ void
 VampTestPlugin::setParameter(string identifier, float value) 
 {
     if (identifier == "produce_output") {
-	m_produceOutput = (value > 0.5);
+        m_produceOutput = (value > 0.5);
     }
 }
 
@@ -313,7 +341,7 @@ bool
 VampTestPlugin::initialise(size_t channels, size_t stepSize, size_t blockSize)
 {
     if (channels < getMinChannelCount() ||
-	channels > getMaxChannelCount()) return false;
+        channels > getMaxChannelCount()) return false;
 
     m_channels = channels;
     m_stepSize = stepSize;
@@ -393,8 +421,8 @@ gridColumn(RealTime r, int i, int n)
     f.hasTimestamp = false;
     f.hasDuration = false;
     for (int j = 0; j < 10; ++j) {
-	float v = float(j + i + 2) / float(n + 10);
-	f.values.push_back(v);
+        float v = float(j + i + 2) / float(n + 10);
+        f.values.push_back(v);
     }
     s << i+1 << " of " << n << " at " << r.toText();
     f.label = s.str();
@@ -430,76 +458,76 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
     FeatureSet fs;
 
     RealTime endTime = timestamp + RealTime::frame2RealTime
-	(m_stepSize, m_inputSampleRate);
+        (m_stepSize, m_inputSampleRate);
 
     for (int i = 0; i < (int)m_instants.size(); ++i) {
 
-	if (m_instants[i] >= timestamp && (final || m_instants[i] < endTime)) {
-	    fs[m_outputNumbers["instants"]]
-		.push_back(instant(m_instants[i], i, m_instants.size()));
-	}
+        if (m_instants[i] >= timestamp && (final || m_instants[i] < endTime)) {
+            fs[m_outputNumbers["instants"]]
+                .push_back(instant(m_instants[i], i, m_instants.size()));
+        }
 
-	RealTime variCurveTime = m_instants[i] / 2;
-	if (variCurveTime >= timestamp && (final || variCurveTime < endTime)) {
-	    fs[m_outputNumbers["curve-vsr"]]
-		.push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
-	}
+        RealTime variCurveTime = m_instants[i] / 2;
+        if (variCurveTime >= timestamp && (final || variCurveTime < endTime)) {
+            fs[m_outputNumbers["curve-vsr"]]
+                .push_back(timedCurveValue(variCurveTime, i, m_instants.size()));
+        }
 
-	RealTime noteTime = (m_instants[i] + m_instants[i]) / 3;
-	RealTime noteDuration = RealTime::fromSeconds((i % 2 == 0) ? 1.75 : 0.5);
+        RealTime noteTime = (m_instants[i] + m_instants[i]) / 3;
+        RealTime noteDuration = RealTime::fromSeconds((i % 2 == 0) ? 1.75 : 0.5);
 
-	if (noteTime >= timestamp && (final || noteTime < endTime)) {
-	    fs[m_outputNumbers["notes-regions"]]
-		.push_back(noteOrRegion(noteTime, noteDuration, i, m_instants.size()));
-	}
+        if (noteTime >= timestamp && (final || noteTime < endTime)) {
+            fs[m_outputNumbers["notes-regions"]]
+                .push_back(noteOrRegion(noteTime, noteDuration, i, m_instants.size()));
+        }
     }
 
     if (!final) {
 
-	if (m_n < 20) {
-	    fs[m_outputNumbers["curve-oss"]]
-		.push_back(untimedCurveValue(timestamp, m_n, 20));
-	}
+        if (m_n < 20) {
+            fs[m_outputNumbers["curve-oss"]]
+                .push_back(untimedCurveValue(timestamp, m_n, 20));
+        }
 
-	if (m_n < 5) {
-	    fs[m_outputNumbers["curve-fsr"]]
-		.push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.5), m_n, 10));
+        if (m_n < 5) {
+            fs[m_outputNumbers["curve-fsr"]]
+                .push_back(untimedCurveValue(RealTime::fromSeconds(m_n / 2.5), m_n, 10));
 
-	    float s = (m_n / 4) * 2;
-	    if ((m_n % 4) > 0) {
-		s += float((m_n % 4) - 1) / 6.0;
-	    }
-	    fs[m_outputNumbers["curve-fsr-timed"]]
-		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
-					     RealTime::fromSeconds(snap(s, 0.4)),
-					     m_n, 10));
-	}
+            float s = (m_n / 4) * 2;
+            if ((m_n % 4) > 0) {
+                s += float((m_n % 4) - 1) / 6.0;
+            }
+            fs[m_outputNumbers["curve-fsr-timed"]]
+                .push_back(snappedCurveValue(RealTime::fromSeconds(s),
+                                             RealTime::fromSeconds(snap(s, 0.4)),
+                                             m_n, 10));
+        }
 
-	if (m_n < 20) {
-	    fs[m_outputNumbers["grid-oss"]]
-		.push_back(gridColumn(timestamp, m_n, 20));
-	}
+        if (m_n < 20) {
+            fs[m_outputNumbers["grid-oss"]]
+                .push_back(gridColumn(timestamp, m_n, 20));
+        }
 
     } else {
 
-	for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
-	    fs[m_outputNumbers["curve-fsr"]]
-		.push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.5), i, 10));
+        for (int i = (m_n > 5 ? 5 : m_n); i < 10; ++i) {
+            fs[m_outputNumbers["curve-fsr"]]
+                .push_back(untimedCurveValue(RealTime::fromSeconds(i / 2.5), i, 10));
 
-	    float s = (i / 4) * 2;
-	    if ((i % 4) > 0) {
-		s += float((i % 4) - 1) / 6.0;
-	    }
-	    fs[m_outputNumbers["curve-fsr-timed"]]
-		.push_back(snappedCurveValue(RealTime::fromSeconds(s),
-					     RealTime::fromSeconds(snap(s, 0.4)),
-					     i, 10));
-	}
-
-	for (int i = 0; i < 10; ++i) {
-	    fs[m_outputNumbers["grid-fsr"]]
-		.push_back(gridColumn(RealTime::fromSeconds(i / 2.5), i, 10));
-	}
+            float s = (i / 4) * 2;
+            if ((i % 4) > 0) {
+                s += float((i % 4) - 1) / 6.0;
+            }
+            fs[m_outputNumbers["curve-fsr-timed"]]
+                .push_back(snappedCurveValue(RealTime::fromSeconds(s),
+                                             RealTime::fromSeconds(snap(s, 0.4)),
+                                             i, 10));
+        }
+        
+        for (int i = 0; i < 10; ++i) {
+            fs[m_outputNumbers["grid-fsr"]]
+                .push_back(gridColumn(RealTime::fromSeconds(i / 2.5), i, 10));
+        }
     }
 
     m_lastTime = endTime;
@@ -517,39 +545,39 @@ VampTestPlugin::process(const float *const *inputBuffers, RealTime timestamp)
     float eps = 1e-6f;
 
     for (int c = 0; c < m_channels; ++c) {
-	if (!m_frequencyDomain) {
-	    // first value plus number of non-zero values
-	    float sum = inputBuffers[c][0];
-	    for (int i = 0; i < m_blockSize; ++i) {
-		if (fabsf(inputBuffers[c][i]) >= eps) sum += 1;
-	    }
-	    f.values.push_back(sum);
-	} else {
-	    // If we're in frequency-domain mode, we convert back to
-	    // time-domain to calculate the input-summary feature
-	    // output. That should help the caller check that
-	    // time-frequency conversion has gone more or less OK,
-	    // though they'll still have to bear in mind windowing and
-	    // FFT shift (i.e. phase shift which puts the first
-	    // element in the middle of the frame)
-	    vector<double> ri(m_blockSize, 0.0);
-	    vector<double> ii(m_blockSize, 0.0);
-	    vector<double> ro(m_blockSize, 0.0);
-	    vector<double> io(m_blockSize, 0.0);
-	    for (int i = 0; i <= m_blockSize/2; ++i) {
-		ri[i] = inputBuffers[c][i*2];
-		ii[i] = inputBuffers[c][i*2 + 1];
-		if (i > 0) ri[m_blockSize-i] =  ri[i];
-		if (i > 0) ii[m_blockSize-i] = -ii[i];
-	    }
-	    Vamp::FFT::inverse(m_blockSize, &ri[0], &ii[0], &ro[0], &io[0]);
-	    float sum = 0;
-	    for (int i = 0; i < m_blockSize; ++i) {
-		if (fabs(ro[i]) >= eps) sum += 1;
-	    }
-	    sum += ro[0];
-	    f.values.push_back(sum);
-	}	    
+        if (!m_frequencyDomain) {
+            // first value plus number of non-zero values
+            float sum = inputBuffers[c][0];
+            for (int i = 0; i < m_blockSize; ++i) {
+                if (fabsf(inputBuffers[c][i]) >= eps) sum += 1;
+            }
+            f.values.push_back(sum);
+        } else {
+            // If we're in frequency-domain mode, we convert back to
+            // time-domain to calculate the input-summary feature
+            // output. That should help the caller check that
+            // time-frequency conversion has gone more or less OK,
+            // though they'll still have to bear in mind windowing and
+            // FFT shift (i.e. phase shift which puts the first
+            // element in the middle of the frame)
+            vector<double> ri(m_blockSize, 0.0);
+            vector<double> ii(m_blockSize, 0.0);
+            vector<double> ro(m_blockSize, 0.0);
+            vector<double> io(m_blockSize, 0.0);
+            for (int i = 0; i <= m_blockSize/2; ++i) {
+                ri[i] = inputBuffers[c][i*2];
+                ii[i] = inputBuffers[c][i*2 + 1];
+                if (i > 0) ri[m_blockSize-i] =  ri[i];
+                if (i > 0) ii[m_blockSize-i] = -ii[i];
+            }
+            Vamp::FFT::inverse(m_blockSize, &ri[0], &ii[0], &ro[0], &io[0]);
+            float sum = 0;
+            for (int i = 0; i < m_blockSize; ++i) {
+                if (fabs(ro[i]) >= eps) sum += 1;
+            }
+            sum += ro[0];
+            f.values.push_back(sum);
+        }           
     }
 
     fs[m_outputNumbers["input-summary"]].push_back(f);
