@@ -540,11 +540,11 @@ VampTestPlugin::featuresFrom(RealTime timestamp, bool final)
 
         for (int i = 0; i < 10; ++i) {
             static std::vector<float> times {
-                2.4, 2.9, 3.14, 3.5, 4.0, 3.7, 4, 4.4, 4.8, 5
+                2.4, 2.9, 3.14, 3.5, 4.0, 4.4, 3.9, 4.4, 4.8, 5
             };
             float s = times[i];
             float sn = snap(s, 0.4) + 1e-5; // to avoid printing e.g. 2.799
-            if (i == 4 || i == 8) {
+            if (i == 4 || i == 5 || i == 8) {
                 fs[m_outputNumbers["curve-fsr-mixed"]]
                     .push_back(untimedCurveValue(RealTime::fromSeconds(s),
                                                  i, 10));
