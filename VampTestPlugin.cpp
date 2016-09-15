@@ -93,7 +93,7 @@ VampTestPlugin::getMaker() const
 int
 VampTestPlugin::getPluginVersion() const
 {
-    return 3;
+    return 4;
 }
 
 string
