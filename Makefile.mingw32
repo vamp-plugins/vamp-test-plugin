@@ -8,7 +8,7 @@ RANLIB		= $(TOOLPREFIX)ranlib
 
 VAMPSDK_DIR	?= ../vamp-plugin-sdk
 
-CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) $(ARCHFLAGS)
+CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) $(ARCHFLAGS) -std=c++11
 
 PLUGIN_EXT	:= .dll
 

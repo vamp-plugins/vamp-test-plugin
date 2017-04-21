@@ -3,7 +3,7 @@ VAMPSDK_DIR	:= ../vamp-plugin-sdk
 
 ARCHFLAGS 	:= -mmacosx-version-min=10.7 -stdlib=libc++
 
-CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS)
+CXXFLAGS	:= -Wall -Wextra -Werror -I$(VAMPSDK_DIR) -g -fPIC $(ARCHFLAGS) -std=c++11
 
 PLUGIN_LDFLAGS	:= -dynamiclib $(ARCHFLAGS) $(VAMPSDK_DIR)/libvamp-sdk.a -exported_symbols_list vamp-plugin.list -install_name vamp-test-plugin.dylib
 
