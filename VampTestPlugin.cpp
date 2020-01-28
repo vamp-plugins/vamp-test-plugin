@@ -460,9 +460,10 @@ noteOrRegion(RealTime r, RealTime d, int i, int n)
 }
 
 static
-float snap(float x, float r)
+double snap(double x, double r)
 {
-    int n = int(x / r + 0.5);
+    double eps = 1e-9;
+    int n = int(x / r + 0.5 + eps);
     return n * r;
 }
 
